@@ -5,16 +5,55 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>canvas pinter</title>
-    <style type="css/text">
+    <style type="text/css">
+     * {
+         padding : 0;
+         margin: 0;
+     }
+     html,body {
+         height : 100%;
+     }
      canvas {
-         width:100vw;
-         height:100vh;
-         border: 3px  solid #;1611e8
+         /* width:100%;
+         height:99%; */
+         /* border: 3px  solid #1611e8; */
+         /* border-bottom: 3px  solid #1611e8; */
 
      }
     </style>
 </head>
 <body>
     <canvas id="workspace">your browser dose not support canvas ,so...</canvas>
+    <script >
+    (function(){
+      var canvasLayers = document.querySelectorAll("canvas");
+      var metaCanvas = canvasLayers[0];
+      var metaCtx = metaCanvas.getContext("2d");
+      
+      metaCanvas.width = window.innerWidth;
+      metaCanvas.height=window.innerHeight;
+
+      var prePos = undefined;//draw line start from here
+      metaCtx.strokeStyle="#000000";
+      function penmove(e){
+        metaCtx.lineTo(e.clientX,e.clientY);
+        metaCtx.stroke();
+
+        metaCtx.beginPath();
+        metaCtx.moveTo(e.clientX,e.clientY);
+      }
+      metaCanvas.onmousedown = function(e){
+        metaCtx.beginPath();
+        metaCtx.moveTo(e.clientX,e.clientY);
+        metaCanvas.addEventListener("mousemove",penmove,false);
+      }
+      metaCanvas.onmouseup = function(e){
+        metaCtx.lineTo(e.clientX,e.clientY);
+        metaCtx.stroke();
+        metaCanvas.removeEventListener("mousemove",penmove,false);
+      }
+
+    })();//all js codes
+    </script>
 </body>
 </html>
