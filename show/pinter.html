@@ -28,7 +28,8 @@
        right:0;
        width:10vw;
        height:70vh;
-       border: 3px  solid #1611e8;
+       border: 3px  solid #3c3b5a;
+       /* background-color: hsla(153,100%,50%,.1); */
     }
     </style>
 </head>
@@ -36,18 +37,23 @@
     <canvas id="workspace">your browser dose not support canvas ,so...</canvas>
     <div id="controlers">
         <div>*铅笔</div>
-        <div>*直线</div>
-        <div>*色块</div>
         <div>*喷枪</div>
+        <div>*直线</div>
+        <div>*矩形</div>
+        <div>*圆形</div>
+        <div>*圆弧</div>
         <div>*文字</div>
         <div>*图片</div>
         <hr><hr><hr>
         <div>*闭合否</div>
         <div>*填充<br>颜色</div>
         <div>*边框/线条<br>粗细<br>颜色</div>
+        <!-- shadowColor 透明有奇效 -->
+        <div>*模糊(喷枪效果)</div>
         <hr><hr><hr>
         <div>*图层<br><br><br><br></div>
         <hr><hr><hr>
+        <div>hsla取色器</div>
         <div>*保存</div>
     </div>
     <script >
@@ -58,29 +64,146 @@
       var metaCtx = metaCanvas.getContext("2d");
       
       controlers.style.zIndex="1";
-      metaCanvas.style.zIndex="2";
+      metaCanvas.style.zIndex="2";  
       
 
       metaCanvas.width = window.innerWidth;
       metaCanvas.height=window.innerHeight;
 
-      var prePos = undefined;//draw line start from here
-      metaCtx.strokeStyle="#000000";
-      function penmove(e){
-        metaCtx.lineTo(e.clientX,e.clientY);
-        metaCtx.stroke();
+    //   var prePos = undefined;//draw line start from here
+    //   metaCtx.strokeStyle="hsla(180,100%,50%,.1)";
+    //   metaCtx.shadowColor =  "#7cabe4" ;
+    //   metaCtx.shadowBlur=20;
+    //   function penmove(e){
+    //     metaCtx.lineTo(e.clientX,e.clientY);
+    //     metaCtx.stroke();
+    //   }
+    //   metaCanvas.onmousedown = function(e){
+    //     metaCtx.save();
+    //     metaCtx.beginPath();
+    //     metaCtx.moveTo(e.clientX,e.clientY);
+    //     metaCanvas.addEventListener("mousemove",penmove,false);
+    //   }
+    //   metaCanvas.onmouseup = function(e){
+    //     metaCtx.lineTo(e.clientX,e.clientY);
+
+    //     // 闭合路径
+    //     metaCtx.closePath();
+    //     metaCtx.stroke();
+    //     metaCtx.clip();
+    //     // use (get|put)ImageData() to put cliped part on a new layer
+    //     metaCtx.restore();
+    //     metaCanvas.removeEventListener("mousemove",penmove,false);
+    //   }
+
+
+
+      /**  铅笔  **/
+      var PT=function(canvas,ctx,configs){
+        if(canvas.tagName != "CANVAS")throw(new Error("we need a canvas"));
+        if(!ctx)throw(new Error("we need a canvas context"));
+        this.configs = {
+            fillStyle : '',
+            strokeStyle : '',
+            shadowColor : "#000000",
+            shadowBlur  : 0,
+            fcolor:"#000000",
+            scolor:"#000000",
+            penWidth:5,
+            fgradient:{},//'color':rate[0~1] like 'hsla(100,50%,50%,1)':0
+            sgradient:{},
+            isClose:false,
+            isClip:false,
+           };
+          this.canvas = canvas;
+          this.ctx=ctx;
+          for(i in configs){
+              this.configs[i]=configs[i];
+          }
+        return this;
       }
-      metaCanvas.onmousedown = function(e){
-        metaCtx.beginPath();
-        metaCtx.moveTo(e.clientX,e.clientY);
-        metaCanvas.addEventListener("mousemove",penmove,false);
-      }
-      metaCanvas.onmouseup = function(e){
-        metaCtx.lineTo(e.clientX,e.clientY);
-        // metaCtx.closePath();
-        metaCtx.stroke();
-        metaCanvas.removeEventListener("mousemove",penmove,false);
-      }
+      
+      PT.prototype = {
+            constructor:PT,
+            addFillColor:function(gra){
+                var fg = this.configs.fgradient;
+                for(i in fg){
+                    gra.addColorStop(fg[i],i);
+                }
+            },
+            addStrokeColor:function(gra){
+                var sg = this.configs.sgradient;
+                for(i in sg){
+                    gra.addColorStop(sg[i],i);
+                }
+            },
+            renderCtx:function(config){
+               var ctx = this.ctx;
+               var conf = this.configs;
+               for(i in config){
+                conf[i]=config[i];
+               }
+               
+               //渐变色后判断
+               ctx.fillStyle = conf.fcolor||"#000000" ;
+               ctx.strokeStyle = conf.scolor||"#000000" ;
+               ctx.shadowBlur = conf.shadowBlur;
+               ctx.shadowColor = conf.shadowColor;
+               
+               return this;
+            },
+            usePen:function(){
+               var ctx=this.ctx;
+               var canvas = this.canvas;
+               var conf = this.configs;
+               var close = conf.isClose;
+               var clip = conf.isClip;
+               function indraw(e){
+                   ctx.lineTo(e.clientX,e.clientY);
+                   ctx.stroke();
+               }
+               function startDraw(e){
+                   ctx.save();
+                   ctx.beginPath();
+                   ctx.moveTo(e.clientX , e.clientY);
+                   canvas.addEventListener("mousemove",indraw,false);
+                }
+                function endDraw(e){
+                    ctx.lineTo(e.clientX , e.clientY);
+                    if(close){
+                        ctx.closePath();
+                    }
+                    ctx.stroke();
+                    if(clip){
+                        ctx.clip();
+                        //more things todo...
+                    }
+                    ctx.restore();
+                    canvas.removeEventListener("mousemove",indraw,false);
+
+                }
+                
+                
+                canvas.onmousedown=startDraw;
+                canvas.onmouseup=endDraw;
+                return this;
+                
+                
+
+           },
+           useSpray:function(){
+               //todo
+               var ctx=this.ctx;
+               var canvas = this.canvas;
+               var conf = this.configs;
+               function startDraw(e){
+                   //draw arc
+               }
+           }
+
+      };//paintTools
+
+      new PT(metaCanvas , metaCtx).renderCtx({lineWidth:10}).usePen();
 
     })();//all js codes
     </script>
