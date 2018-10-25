@@ -149,6 +149,7 @@
                ctx.strokeStyle = conf.scolor||"#000000" ;
                ctx.shadowBlur = conf.shadowBlur;
                ctx.shadowColor = conf.shadowColor;
+               ctx.lineWidth=conf.penWidth;
                
                return this;
             },
@@ -193,17 +194,39 @@
            },
            useSpray:function(){
                //todo
+               var that=this;
                var ctx=this.ctx;
                var canvas = this.canvas;
                var conf = this.configs;
+               function indraw(e){
+                   var gra=ctx.createRadialGradient(e.clientX,e.clientY,0,e.clientX,e.clientY,conf.penWidth/2);
+                   that.addFillColor(gra);
+                   ctx.fillStyle=gra;
+                   ctx.arc(e.clientX,e.clientY,conf.penWidth/2,0,Math.PI*2);
+                   ctx.stroke();
+                   ctx.fill();
+               }
                function startDraw(e){
                    //draw arc
+                   ctx.save();
+                   ctx.beginPath();
+                   
+                   canvas.addEventListener("mousemove",indraw,false);
                }
+               function endDraw(e){
+                   ctx.restore();
+                   canvas.removeEventListener("mousemove",indraw,false);
+               }
+
+               canvas.onmousedown=startDraw;
+               canvas.onmouseup = endDraw;
+               return this;
            }
 
       };//paintTools
 
-      new PT(metaCanvas , metaCtx).renderCtx({lineWidth:10}).usePen();
+    //   new PT(metaCanvas , metaCtx).renderCtx({lineWidth:10}).usePen();
+    new PT(metaCanvas,metaCtx).renderCtx({penWidth:10,fgradient:{"red":0,"white":1}}).useSpray();
 
     })();//all js codes
     </script>
