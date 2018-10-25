@@ -171,6 +171,9 @@
                 }
                 function endDraw(e){
                     ctx.lineTo(e.clientX , e.clientY);
+                    //fill the path from beginPath
+                //    ctx.fill();
+
                     if(close){
                         ctx.closePath();
                     }
@@ -199,18 +202,19 @@
                var canvas = this.canvas;
                var conf = this.configs;
                function indraw(e){
+                  ctx.beginPath();
                    var gra=ctx.createRadialGradient(e.clientX,e.clientY,0,e.clientX,e.clientY,conf.penWidth/2);
                    that.addFillColor(gra);
                    ctx.fillStyle=gra;
                    ctx.arc(e.clientX,e.clientY,conf.penWidth/2,0,Math.PI*2);
-                   ctx.stroke();
+                //    ctx.stroke();
                    ctx.fill();
                }
                function startDraw(e){
                    //draw arc
                    ctx.save();
                    ctx.beginPath();
-                   
+                //    ctx.globalCompositeOperation="lighter";
                    canvas.addEventListener("mousemove",indraw,false);
                }
                function endDraw(e){
@@ -225,8 +229,9 @@
 
       };//paintTools
 
-    //   new PT(metaCanvas , metaCtx).renderCtx({lineWidth:10}).usePen();
-    new PT(metaCanvas,metaCtx).renderCtx({penWidth:10,fgradient:{"red":0,"white":1}}).useSpray();
+      new PT(metaCanvas , metaCtx).renderCtx({penWidth:10}).usePen();
+
+    // new PT(metaCanvas,metaCtx).renderCtx({penWidth:20,fgradient:{"red":0,"hsla(0,50%,50%,.2)":1}}).useSpray();
 
     })();//all js codes
     </script>
