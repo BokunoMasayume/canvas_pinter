@@ -225,14 +225,93 @@
                canvas.onmousedown=startDraw;
                canvas.onmouseup = endDraw;
                return this;
+           },
+
+           drawLine(){
+               var ctx=this.ctx;
+               var canvas = this.canvas;
+               var conf = this.configs;
+               var tempCD={};//canvas data
+               function draw(){
+                   ctx.beginPath();
+                   ctx.moveTo(tempCD.startX , tempCD.startY);
+                   ctx.lineTo(tempCD.endX , tempCD.endY);
+                   ctx.stroke();
+               }
+               
+               function inTempDraw(e){
+                   tempCD.ctx.clearRect(0,0,tempCD.canvas.width,tempCD.canvas.height);
+                   tempCD.ctx.beginPath();
+                   tempCD.ctx.moveTo(tempCD.startX,tempCD.startY);
+                   tempCD.ctx.lineTo(e.clientX,e.clientY);
+                   tempCD.ctx.stroke();
+                   console.log(tempCD.canvas.width,tempCD.canvas.height);
+
+               }
+              
+               /*渲染临时canvas context*/
+               function renderTempCtx(ctx,config){
+               
+                   //渐变色后判断
+                   ctx.fillStyle = conf.fcolor||"#000000" ;
+                   ctx.strokeStyle = conf.scolor||"#000000" ;
+                   ctx.shadowBlur = conf.shadowBlur;
+                   ctx.shadowColor = conf.shadowColor;
+                   ctx.lineWidth=conf.penWidth;
+               
+               }
+
+               /*新建临时canvas覆盖原canvas*/
+               function startTempDraw(e){
+                   var tempCanvas = document.createElement('canvas');
+                   var body = document.querySelector("body");
+                   tempCanvas.width = canvas.width;
+                   tempCanvas.height = canvas.height;
+                   tempCanvas.style.zIndex="1000";
+                   body.appendChild(tempCanvas);
+                   
+                   tempCD.canvas = tempCanvas;
+                   tempCD.ctx = tempCanvas.getContext("2d");
+                   tempCD.startX = e.clientX;
+                   tempCD.startY = e.clientY;
+                   tempCD.body = body;
+
+                   renderTempCtx(tempCD.ctx,conf);
+
+                   tempCD.ctx.beginPath();
+                   tempCD.ctx.moveTo(e.clientX , e.clientY);
+
+                   tempCanvas.addEventListener("mousemove",inTempDraw,false);
+                    
+                   /*******************/
+                   tempCanvas.onmouseup = endTempDraw;
+              }
+
+               function endTempDraw(e){
+                   tempCD.ctx.lineTo(e.clientX , e.clientY);
+
+                   tempCD.ctx.stroke();
+                   tempCD.endX = e.clientX;
+                   tempCD.endY = e.clientY;
+
+                   tempCD.canvas.removeEventListener("mousemove",inTempDraw,false);
+
+                   tempCD.body.removeChild(tempCD.canvas);
+
+                   draw();
+                   tempCD={};
+
+               }
+               canvas.onmousedown=startTempDraw;
            }
 
       };//paintTools
 
-      new PT(metaCanvas , metaCtx).renderCtx({penWidth:10}).usePen();
+    //   new PT(metaCanvas , metaCtx).renderCtx({penWidth:10}).usePen();
 
     // new PT(metaCanvas,metaCtx).renderCtx({penWidth:20,fgradient:{"red":0,"hsla(0,50%,50%,.2)":1}}).useSpray();
-
+    new PT(metaCanvas , metaCtx).renderCtx({penWidth:10}).drawLine();
+      
     })();//all js codes
     </script>
 </body>
